@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# This script is to automatically shutdown computer using short-
+# cut key and dmenu(a dynamic menu for X, designed for dwm.
+# To download dmenu, you can goto tools.suckless.org/dmenu/)
+
+if [ $(echo -e "Yes\nNo" | dmenu -i -p\
+         "Do you want to shutdown your computer?"\
+ ) = "Yes" ]
+then
+        shutdown now
+fi
