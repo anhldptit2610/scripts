@@ -1,0 +1,99 @@
+#!/bin/bash
+
+PROGRAM_NAME=$0
+ARDUINO_PATH=/home/lda/Arduino/
+
+usage()
+{
+        echo "arduino-upload: lda's script to work with arduino-cli"
+        echo "usage: $PROGRAM_NAME [-b boardtype] [-s sketch_name] [-auchn]"
+        echo "   -b: specify board type. Only support arduino UNO(uno) and ESP8266(esp8266)"
+        echo "   -p: specify port."
+        echo "   -a: show all available boards"
+        echo "   -s: specify the sketch we want to compile"
+        echo "   -u: compile and upload"
+        echo "   -c: only compile the sketch"
+        echo "   -n: create new sketch, if not created yet"
+        echo "   -h: show help"
+        exit 1
+}
+
+show_available_board()
+{
+        arduino-cli board list
+        exit 0
+}
+
+create_new_sketch()
+{
+        arduino-cli sketch new $SKETCH
+        echo "Moving the project directory to $ARDUINO_PATH"
+        mv $SKETCH $ARDUINO_PATH
+        exit 0
+}
+
+compile()
+{
+        if [ -z $BOARD ] || [ -z $SKETCH ]
+        then
+                echo "You are missing something. Either board type or sketch name..."
+                exit 1
+        fi
+        echo "compiling the sketch $SKETCH..."
+        echo "board: $BOARD"
+        arduino-cli compile -b $BOARD $ARDUINO_PATH/$SKETCH
+        if [ $? -ne 0 ]
+        then
+                exit 1
+        fi
+        exit 0
+}
+
+compile_and_upload()
+{
+        if [ -z $BOARD ] || [ -z $SKETCH ]
+        then
+                echo "Error: You are missing something. Either board type or sketch name..."
+                exit 1
+        fi
+        if [ -z $PORT ]
+        then
+                PORT=/dev/ttyUSB0
+        fi
+
+        echo "compiling the sketch $SKETCH..."
+        echo "board: $BOARD"
+        arduino-cli compile -b $BOARD $ARDUINO_PATH/$SKETCH
+        if [ $? -ne 0 ]
+        then
+                exit 1
+        fi
+        echo "uploading the compiled sketch..."
+        arduino-cli upload -p $PORT -b $BOARD $ARDUINO_PATH/$SKETCH
+        if [ $? -ne 0 ]
+        then
+                exit 1
+        fi
+        exit 0
+}
+
+while getopts "ab:chnp:s:u" opt
+do
+        case "$opt" in
+                a ) show_available_board;;
+                b ) if [ $OPTARG = "uno" ]
+                    then
+                            BOARD=arduino:avr:uno
+                    elif [ $OPTARG = "esp8266" ]
+                    then
+                            BOARD=esp8266:esp8266:nodemcuv2
+                    fi;;
+                c ) compile;;
+                n ) create_new_sketch;;
+                p ) PORT="$OPTARG";;
+                s ) SKETCH="$OPTARG";;
+                u ) compile_and_upload;;
+                h ) usage;;
+                * ) ;;
+        esac
+done
