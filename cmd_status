@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# This script checks the status of the last executed command
+# Either 0 for success or non-zero for failure.
+
+echo "${?}"
